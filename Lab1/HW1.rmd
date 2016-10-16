@@ -1,0 +1,56 @@
+1. 
+```{r}
+#create the sinx
+x <- seq(-4,4,0.1)
+a <- sin(x)
+#create the quadratic
+y <- seq(-2,2,0.1)
+b <- x^2
+#create the step function
+y0<-rep(0,40)
+y1<-rep(1,41)
+step <- append(y0,y1)
+#add NAs to end and beginning values of the vector to make sure range(x) is between -3 and 3
+step[1:10] <- NA
+step[72:81] <- NA
+
+
+plot(x, a, type='l', col='red', xlim=c(-4,4), ylim=c(-4, 4), main='Multiple Graphs')
+lines(x, b, type='p', col='green')
+lines(x, step, type='o', col='blue')
+legend(0,-1.5,legend = c("Sin", "X^2", "Stepwise"),fill=c('red','green','blue'))
+```
+2.
+```{r}
+#my own implementation of the aov function (one-way anova)
+myANOVA <- function(data, labels) {
+  #number of levels of labels
+  a <-length(levels(labels))
+  #number of observations for each label (assumes that its the same number for each label)
+  n <-length(resp)/length(levels(tm))
+  dftreat <- a - 1
+  dferror <- a*(n-1)
+  dftotal <- a*n -1
+  
+  #create one df for data and labels to easilt calculate treatment SS
+  df <- cbind(data,labels)
+  treatment_vector <- aggregate(data, by=list(labels), FUN=sum)
+  
+  sstotal <- sum(data^2) - (sum(data))^2/length(data)
+  sstreat <- sum(treatment_vector$x^2)/n - (sum(data))^2/length(data)
+  sse <- sstotal - sstreat
+  
+  mstreat <- sstreat/dftreat
+  mse <- sse/dferror
+  
+  f <- mstreat/mse
+  f_crit <- qf(1-0.01,df1=dftreat,df2=dferror)
+  
+  if (f > f_crit) {
+   return(paste('Reject the Null at the 99% level because ', toString(f), ' is greater than ', toString(f_crit), sep=''))
+  } else {
+   return(paste('Do not reject the Null at the 99% level because ', toString(f), ' is less than ', toString(f_crit), sep=''))
+  }
+}
+```
+
