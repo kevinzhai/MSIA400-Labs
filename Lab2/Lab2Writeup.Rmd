@@ -1,0 +1,92 @@
+---
+title: "Lab2.rmd"
+author: "Kevin Zhai"
+date: "10/31/2016"
+output: pdf_document
+---
+1.
+```{r}
+wine <- read.csv(file="redwine.txt",head=TRUE,sep="\t")
+mean(wine$RS, na.rm = T)
+mean(wine$SD, na.rm = T)
+```
+The average of RS is 2.53 and the average of SD is 46.2 when we ignore the NA values.
+
+2. 
+```{r}
+SDFS <- cbind(wine$SD,wine$FS)
+SDFS.omit <- na.omit(SDFS)
+reg <- lm(SDFS.omit[,1] ~ SDFS.omit[,2])
+coef(reg)
+
+```
+The coefficients for the Intercept and FS are 13.18 and 2.08 respectively. 
+
+3. 
+```{r}
+#Function for imputing using SDFS Regression Model 
+reg.imp <- function (a){
+       missing <- is.na(a)                
+       n.missing <- sum(missing)     
+       a.obs <- a[!missing]
+       imputed <- a
+       imputed[missing] <- 2.08*SDFS[is.na(SDFS[,1])][18:34] + 13.18
+       return (imputed)
+}
+wine$SD <- reg.imp(wine$SD)
+mean(wine$SD)
+
+```
+The average value of SD is now 46.3.
+
+4.
+```{r}
+avg.imp <- function (a, avg){
+        missing <- is.na(a)
+        n.missing <- sum(missing)
+        a.obs <- a[!missing]
+        imputed <- a
+        imputed[missing] <- avg
+       return (imputed)
+}
+wine$RS <- avg.imp(wine$RS,mean(wine$RS, na.rm = T))
+mean(wine$RS)
+
+```
+The average stays the same at 2.53, which is the intuitive answer. 
+
+5.
+```{r}
+winemodel <- lm(wine$QA~wine$FA+wine$VA+wine$CA+wine$RS+wine$CH+wine$FS+wine$SD+wine$DE+wine$PH+wine$SU+wine$AL)
+coef(winemodel)
+
+```
+6.
+```{r}
+summary(winemodel)
+```
+Based on the predictor with the highest p-value, PH seems to be the the one that is least likely related to QA. The p-value is 0.41, which is very unsignificant. 
+
+7. 
+```{r}
+library(DAAG)
+validation <- CVlm(data = wine, QA~FA+VA+CA+RS+CH+FS+SD+DE+PH+SU+AL, m=5)
+```
+The average error rate is 0.426.
+
+8.
+```{r}
+phmean <- mean(wine$PH)
+phsd <- sd(wine$PH)
+cutoff <- c(phmean - 3*phsd,phmean +3*phsd)
+redwine2 <- subset(wine, wine$PH<4.48 & wine$PH>2.13)
+str(redwine2)
+```
+19 observations are removed.
+
+9.
+```{r}
+winemodel2 <- lm(redwine2$QA~redwine2$FA+redwine2$VA+redwine2$CA+redwine2$RS+redwine2$CH+redwine2$FS+redwine2$SD+redwine2$DE+redwine2$PH+redwine2$SU+redwine2$AL)
+summary(winemodel2)
+```
+This model is slightly better, with a higher R^2 value and adjusted R^2. Based on the p-values, the 5 best predictors are VA, CH, SD, SU, and AL.  
