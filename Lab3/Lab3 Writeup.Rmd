@@ -1,0 +1,82 @@
+---
+title: "Lab 3"
+author: "Kevin Zhai"
+date: "11/13/2016"
+output: pdf_document
+---
+1.
+```{r setup, include=FALSE}
+boston <- read.csv(file="bostonhousing.txt",head=TRUE,sep="\t")
+reg <- lm(MEDV~. ,data=boston)
+summary(reg)
+```
+1a. The two explanatory variables I would remove from the model are INDUS and AGE. Based on p-values alone, it is clear that these are the only two variables that are insignificant in the full model. They have extremely high p-values, as opposed to the other predictors which have very low p-values. 
+```{r}
+reg.picked <- lm(MEDV~CRIM + ZN + CHAS + NOX + RM + DIS + RAD + TAX + PTRATIO + B + LSTAT,data=boston)
+summary(reg.picked)
+```
+1b. The model improves slightly, with the adjusted r^2 value improving marginally. However, the F-statistic increases significantly, meaning the model has a better explanatory power. 
+
+```{r}
+anova(reg)
+anova(reg.picked)
+mse.reg <- 11078.8 / 492
+mse.reg.picked <- 11081.4 / 494
+mae.reg <- sum(abs(reg$residuals)) / 492
+mae.reg.picked <- sum(abs(reg.picked$residuals)) / 494
+
+print(mse.reg)
+print(mse.reg.picked)
+print(mae.reg)
+print(mae.reg.picked)
+
+```
+
+1c. In both cases, the MSE and the MAE are lower for the model reg.picked, so I would choose that model. 
+
+```{r}
+library(MASS)
+reg.step = step(object=reg, direction='both')
+anova(reg.step)
+
+```
+1d. The model that the stepwise regression picks is the exact same as the model reg.picked, where AGE and INDUS are taken out. Therefore, the SSE is the exact same for both models. 
+
+2. 
+```{r}
+lab <- read.csv(file="labdata.txt",head=TRUE,sep="\t")
+labreg <- lm(y~. ,data=lab)
+summary(labreg)
+```
+```{r}
+plot(lab)
+cor(lab)
+plot(lab$x1,lab$y)
+
+```
+2b. Based on the matrix scatter plot and the pairwise correlations, the relationship between y and x1 seems to be the strongest. I would use x1 as the best predictor of y.
+```{r}
+mean(lab$x1)
+library(segmented)
+labreg.x1 = lm(y ~ x1, data=lab)
+labreg.piece = segmented(labreg.x1, seg.Z = ~x1, psi=17.19)
+anova(labreg)
+anova(labreg.piece)
+plot(lab$x1, lab$y)
+plot(labreg.piece, add=T)
+
+```
+At first glance at the SSE, the SSE of the reg.piece model is much lower. It also has a higher DF, meaning the MSE will be much lower for the piecewise model, so I would choose that one. 
+
+
+
+
+
+
+
+
+
+
+
+
+
